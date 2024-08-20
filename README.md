@@ -33,7 +33,7 @@ full-inventory:
 ```
 
 ## 🛠 How It Works
-![PyAutoPickup Demo](https://imgur.com/a/SSVnKU1.gif)
+![ezgif-4-7f050c04b3](https://github.com/user-attachments/assets/3319c2e1-5e21-46ec-9118-18023f7c9dfb)
 
 ## 🤝 Support & Feedback
 If you encounter any issues or have suggestions for future features, feel free to reach out via discord (666pyke)
