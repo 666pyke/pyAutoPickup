@@ -1,0 +1,17 @@
+
+
+plugin-enabled: true
+
+autopickup:
+
+  blocks: true
+  mob-drops: true
+
+full-inventory:
+
+  chat-message: true
+  chat-message-format: "§8「§cAutoPickup§8」§7» §fYour inventory is full!"
+
+  title-message: true
+  title-message-format: "&c&lFULL INVENTORY!"
+  subtitle-message-format: "&fHeeey!"
