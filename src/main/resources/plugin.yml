@@ -1,10 +1,15 @@
 name: pyAutoPickup
-version: 1.0
+version: ${project.version}
 main: org.me.pyke.pyautopickup.PyAutoPickup
-api-version: 1.20
+api-version: '1.20'
 author: 666pyke
 
 commands:
   pyautopickup:
-    description: "Reloads the plugin configuration."
-    permission: "pyautopickup.reload"
+    description: "Manage pyAutoPickup."
+    usage: "/pyautopickup [toggle|msgtoggle|reload]"
+
+permissions:
+  pyautopickup.reload:
+    description: "Allows reloading the pyAutoPickup configuration."
+    default: op

@@ -1,17 +1,45 @@
-
-
 plugin-enabled: true
+bstats-enabled: true
 
 autopickup:
-
   blocks: true
   mob-drops: true
+  works-in-creative: true
+
+default-bounding-box-radius: 1
+default-bounding-box-radius-ymin: 1
+default-bounding-box-radius-ymax: 1
+
+advanced:
+  # Do not change this unless you know how Bukkit event priorities work.
+  # NORMAL keeps compatibility with cleanup/filter plugins that cancel unwanted vanilla drops.
+  # Valid values: LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR
+  item-spawn-event-priority: NORMAL
+  # If true, pyAutoPickup ignores drops cancelled by other plugins.
+  item-spawn-ignore-cancelled: true
+  # Enables temporary console logs for diagnosing plugin conflicts. Keep false on production.
+  debug: false
+
+blacklisted-worlds: []
 
 full-inventory:
-
   chat-message: true
-  chat-message-format: "§8「§cAutoPickup§8」§7» §fYour inventory is full!"
-
+  chat-message-format: "&#ff5ebc&lAutoPickup &8> &fYour inventory is full."
   title-message: true
-  title-message-format: "&c&lFULL INVENTORY!"
-  subtitle-message-format: "&fHeeey!"
+  title-message-format: "&#ff5ebc&lFULL INVENTORY"
+  subtitle-message-format: "&fYour items were dropped on the ground."
+
+messages:
+  prefix: "&#ff5ebc&lAutoPickup &8> "
+  help:
+    - "&#ff8fd2/pyautopickup toggle &8- &fEnable or disable autopickup."
+    - "&#ff8fd2/pyautopickup msgtoggle &8- &fEnable or disable full-inventory messages."
+    - "&#ff8fd2/pyautopickup reload &8- &fReload the configuration."
+  only-player: "&fOnly players can use this command."
+  no-permission: "&fYou do not have permission to do that. &#ff8fd2*"
+  reload-success: "&fConfiguration reloaded. &#ff8fd2*"
+  toggle-on: "&fAutoPickup is now &#ff8fd2ENABLED&f."
+  toggle-off: "&fAutoPickup is now &#ff5ebcDISABLED&f."
+  msgtoggle-on: "&fFull-inventory messages are now &#ff8fd2ENABLED&f."
+  msgtoggle-off: "&fFull-inventory messages are now &#ff5ebcDISABLED&f."
+  unknown-subcommand: "&fUnknown subcommand. Use &#ff8fd2/pyautopickup&f."
