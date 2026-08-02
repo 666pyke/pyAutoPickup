@@ -4,8 +4,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.me.pyke.pyautopickup.WorldBounding.WorldBoundingBox;
-import org.me.pyke.pyautopickup.WorldBounding.WorldBoundingBoxGenerator;
+import org.me.pyke.pyautopickup.tracking.DropCaptureZone;
+import org.me.pyke.pyautopickup.tracking.DropZoneFactory;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public class DropOwnerManager {
 
-    private final HashMap<WorldBoundingBox, UUID> dropLocationMap = new HashMap<>();
+    private final HashMap<DropCaptureZone, UUID> dropLocationMap = new HashMap<>();
     private final PyAutoPickup plugin;
 
     public DropOwnerManager(PyAutoPickup plugin) {
@@ -22,10 +22,10 @@ public class DropOwnerManager {
 
     public void initializeScheduler() {
         Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
-            Iterator<WorldBoundingBox> iterator = dropLocationMap.keySet().iterator();
+            Iterator<DropCaptureZone> iterator = dropLocationMap.keySet().iterator();
             while (iterator.hasNext()) {
-                WorldBoundingBox boundingBox = iterator.next();
-                if (boundingBox.isExpired()) {
+                DropCaptureZone zone = iterator.next();
+                if (zone.tickAndExpire()) {
                     iterator.remove();
                 }
             }
@@ -45,25 +45,25 @@ public class DropOwnerManager {
     }
 
     public void register(Player player, Location location) {
-        WorldBoundingBox boundingBox = WorldBoundingBoxGenerator.getAppropriateBoundingBox(location, null);
-        dropLocationMap.put(boundingBox, player.getUniqueId());
-        debugRegistered(player, location, boundingBox);
+        DropCaptureZone zone = DropZoneFactory.create(location, null);
+        dropLocationMap.put(zone, player.getUniqueId());
+        debugRegistered(player, location, zone);
     }
 
     public void register(Player player, Location location, Block block) {
-        WorldBoundingBox boundingBox = WorldBoundingBoxGenerator.getAppropriateBoundingBox(location, block);
-        dropLocationMap.put(boundingBox, player.getUniqueId());
-        debugRegistered(player, location, boundingBox);
+        DropCaptureZone zone = DropZoneFactory.create(location, block);
+        dropLocationMap.put(zone, player.getUniqueId());
+        debugRegistered(player, location, zone);
     }
 
-    private Player getDropOwner(Location location, HashMap<WorldBoundingBox, UUID> map) {
-        WorldBoundingBox match = null;
+    private Player getDropOwner(Location location, HashMap<DropCaptureZone, UUID> map) {
+        DropCaptureZone match = null;
         double bestDistance = Double.MAX_VALUE;
-        for (WorldBoundingBox boundingBox : map.keySet()) {
-            if (boundingBox.contains(location)) {
-                double distance = boundingBox.getBoundingBox().getCenter().distanceSquared(location.toVector());
+        for (DropCaptureZone zone : map.keySet()) {
+            if (zone.contains(location)) {
+                double distance = zone.getBounds().getCenter().distanceSquared(location.toVector());
                 if (distance < bestDistance) {
-                    match = boundingBox;
+                    match = zone;
                     bestDistance = distance;
                 }
             }
@@ -71,11 +71,11 @@ public class DropOwnerManager {
         return match == null ? null : Bukkit.getPlayer(map.get(match));
     }
 
-    private void debugRegistered(Player player, Location location, WorldBoundingBox boundingBox) {
+    private void debugRegistered(Player player, Location location, DropCaptureZone zone) {
         if (plugin.getConfig().getBoolean("advanced.debug", false)) {
             plugin.getLogger().info("[Debug] Registered box for " + player.getName()
                     + " at " + location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ()
-                    + " ticksLeft=" + boundingBox.getTicksLeft()
+                    + " ticksLeft=" + zone.getTicksRemaining()
                     + " activeBoxes=" + dropLocationMap.size());
         }
     }

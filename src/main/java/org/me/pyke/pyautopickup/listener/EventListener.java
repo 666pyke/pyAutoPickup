@@ -1,6 +1,5 @@
 package org.me.pyke.pyautopickup.listener;
 
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -15,6 +14,7 @@ import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.EventExecutor;
 import org.me.pyke.pyautopickup.PyAutoPickup;
+import org.me.pyke.pyautopickup.utils.Lang;
 
 public class EventListener implements Listener {
 
@@ -149,18 +149,15 @@ public class EventListener implements Listener {
 
         FileConfiguration config = plugin.getConfig();
         boolean showChatMessage = config.getBoolean("full-inventory.chat-message", true);
-        String chatMessageFormat = ChatColor.translateAlternateColorCodes(
-                '&',
+        String chatMessageFormat = Lang.color(
                 config.getString("full-inventory.chat-message-format", "Inventarul tau este plin! Itemele au fost dropate pe jos.")
         );
 
         boolean showTitleMessage = config.getBoolean("full-inventory.title-message", true);
-        String titleMessageFormat = ChatColor.translateAlternateColorCodes(
-                '&',
+        String titleMessageFormat = Lang.color(
                 config.getString("full-inventory.title-message-format", "FULL INVENTORY!")
         );
-        String subtitleMessageFormat = ChatColor.translateAlternateColorCodes(
-                '&',
+        String subtitleMessageFormat = Lang.color(
                 config.getString("full-inventory.subtitle-message-format", "nu mai ai spatiu")
         );
 
