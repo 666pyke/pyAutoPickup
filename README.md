@@ -1,40 +1,36 @@
-# PyAutoPickup - Minecraft Auto Pickup Plugin
-![Version](https://img.shields.io/badge/version-1.0-brightgreen)
+# pyAutoPickup
+
+<img width="1024" height="512" alt="pyAutoPickup banner" src="https://github.com/user-attachments/assets/66cee316-adc6-480c-bd07-f6f00f4bc3aa" />
+
+![Version](https://img.shields.io/badge/version-1.1-brightgreen)
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.20.x-blue)
+![Storage](https://img.shields.io/badge/storage-SQLite-ff8fd2)
 
-Automatically collects block & mob drops!
+A lightweight Minecraft plugin that automatically collects block drops, mob drops, and custom loot into the player's inventory.
 
-## 👀 Overview
-PyAutoPickup is a minecraft plugin designed to automatically collect block and mob drops directly into the player's inventory. 
-Whether you're mining, farming, or fighting mobs, this plugin ensures that all drops go straight to your inventory.
+## Overview
 
-## 🚀 Features
-- 🟢 **Automatic Block Drop Pickup:** Instantly collect all block drops into your inventory.
-- 🟢 **Automatic Mob Drop Pickup:** Automatically pick up mob drops after killing entities.
-- 🟢 **Compatibility with Other Plugins:** Supports custom drops added by other plugins like RoseLoot and more.
-- 🟢 **Full Inventory Handling:** If your inventory is full, the drops will fall naturally on the ground, and you'll receive a customizable notification.
+pyAutoPickup is made for servers that want simple, reliable auto pickup without breaking custom drop systems.
 
-## ⚙️ Configuration
+Instead of only relying on vanilla block break drops, the plugin listens for spawned item drops. This makes it work better with custom loot plugins such as RoseLoot and similar systems.
 
-```yaml
-plugin-enabled: true
+## Features
 
-autopickup:
-  blocks: true
-  mob-drops: true
-  works-in-creative: false
+- Automatic block drop pickup
+- Automatic mob drop pickup
+- Custom drops support
+- Player toggle command
+- Full-inventory message toggle
+- SQLite storage for player preferences
+- Hex color support for messages
+- Optional bStats support
+- World blacklist support
+- Advanced compatibility settings for item spawn handling
 
-full-inventory:
-  chat-message: true
-  chat-message-format: "&cYour inventory is full! Items have been dropped on the ground."
-  title-message: true
-  title-message-format: "&cFULL INVENTORY!"
-  subtitle-message-format: "&7You don't have any more space!"
-```
+## Commands
 
-## 🛠 How It Works
-![ezgif-4-7f050c04b3](https://github.com/user-attachments/assets/3319c2e1-5e21-46ec-9118-18023f7c9dfb)
-
-## 🤝 Support & Feedback
-If you encounter any issues or have suggestions for future features, feel free to reach out via discord (666pyke)
-or leave a comment on the plugin page.
+```txt
+/pyautopickup
+/pyautopickup toggle
+/pyautopickup msgtoggle
+/pyautopickup reload
