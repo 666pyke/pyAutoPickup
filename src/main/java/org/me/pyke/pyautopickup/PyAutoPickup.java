@@ -2,7 +2,6 @@ package org.me.pyke.pyautopickup;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventPriority;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.me.pyke.pyautopickup.listener.EventListener;
@@ -10,6 +9,8 @@ import org.me.pyke.pyautopickup.listener.SessionListener;
 import org.me.pyke.pyautopickup.storage.Database;
 import org.me.pyke.pyautopickup.storage.ToggleService;
 import org.me.pyke.pyautopickup.utils.Lang;
+import org.me.pyke.pyautopickup.utils.Settings;
+import org.me.pyke.pyautopickup.utils.UpdateChecker;
 
 import java.io.File;
 import java.util.Objects;
@@ -18,6 +19,9 @@ public final class PyAutoPickup extends JavaPlugin {
 
     private static PyAutoPickup instance;
     private DropOwnerManager dropOwnerManager;
+    private Settings settings;
+    private EventListener eventListener;
+    private UpdateChecker updateChecker;
 
     private Database database;
     private ToggleService toggleService;
@@ -32,6 +36,8 @@ public final class PyAutoPickup extends JavaPlugin {
 
         saveDefaultConfig();
         Lang.init(getConfig());
+        settings = new Settings();
+        settings.reload(getConfig());
 
         dropOwnerManager = new DropOwnerManager(this);
         dropOwnerManager.initializeScheduler();
@@ -43,20 +49,23 @@ public final class PyAutoPickup extends JavaPlugin {
             getLogger().severe("Failed to open SQLite database: " + e.getMessage());
         }
 
-        toggleService = new ToggleService(this, database);
+        toggleService = new ToggleService(this, database, settings.isDefaultPickupEnabled());
 
         for (Player p : Bukkit.getOnlinePlayers()) {
             toggleService.warmup(p.getUniqueId());
         }
 
-        EventPriority itemSpawnPriority = getItemSpawnEventPriority();
-        new EventListener(this, itemSpawnPriority).register();
-        getLogger().info("ItemSpawnEvent priority: " + itemSpawnPriority.name());
+        eventListener = new EventListener(this);
+        eventListener.register();
+        getLogger().info("ItemSpawnEvent priority: " + settings.getItemSpawnPriority().name());
         getServer().getPluginManager().registerEvents(new SessionListener(this), this);
 
-        if (getConfig().getBoolean("bstats-enabled", true)) {
+        if (settings.isBStatsEnabled()) {
             new Metrics(this, 32965);
         }
+
+        updateChecker = new UpdateChecker(this);
+        Bukkit.getScheduler().runTaskLater(this, () -> updateChecker.checkAsync(), 60L);
 
         CommandManager commandManager = new CommandManager(this);
         Objects.requireNonNull(this.getCommand("pyautopickup")).setExecutor(commandManager);
@@ -81,6 +90,13 @@ public final class PyAutoPickup extends JavaPlugin {
     public void reloadPluginConfig() {
         reloadConfig();
         Lang.init(getConfig());
+        settings.reload(getConfig());
+        toggleService.setDefaultPickupEnabled(settings.isDefaultPickupEnabled());
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            toggleService.warmup(p.getUniqueId());
+        }
+        eventListener.register();
+        updateChecker.checkAsync();
         getLogger().info("Config reloaded!");
     }
 
@@ -88,13 +104,11 @@ public final class PyAutoPickup extends JavaPlugin {
         return toggleService;
     }
 
-    public EventPriority getItemSpawnEventPriority() {
-        String rawPriority = getConfig().getString("advanced.item-spawn-event-priority", "NORMAL");
-        try {
-            return EventPriority.valueOf(rawPriority.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            getLogger().warning("Invalid advanced.item-spawn-event-priority '" + rawPriority + "'. Using NORMAL.");
-            return EventPriority.NORMAL;
-        }
+    public Settings getSettings() {
+        return settings;
+    }
+
+    public UpdateChecker getUpdateChecker() {
+        return updateChecker;
     }
 }

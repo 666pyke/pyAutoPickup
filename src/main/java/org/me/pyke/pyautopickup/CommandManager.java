@@ -7,6 +7,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.me.pyke.pyautopickup.utils.Lang;
+import org.me.pyke.pyautopickup.utils.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         if (args[0].equalsIgnoreCase("reload")) {
             if (sender instanceof Player) {
                 Player p = (Player) sender;
-                if (p.hasPermission("pyautopickup.reload")) {
+                if (p.hasPermission(Settings.RELOAD_PERMISSION)) {
                     plugin.reloadPluginConfig();
                     p.sendMessage(Lang.prefixed("messages.reload-success", "&aConfig reloaded!"));
                 } else {
@@ -54,6 +55,10 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 return true;
             }
             Player p = (Player) sender;
+            if (plugin.getSettings().isPermissionRequired() && !p.hasPermission(Settings.USE_PERMISSION)) {
+                p.sendMessage(Lang.prefixed("messages.no-permission", "&cYou do not have permission to use this command."));
+                return true;
+            }
             boolean on = plugin.getToggleService().togglePickup(p.getUniqueId());
             p.sendMessage(on
                     ? Lang.prefixed("messages.toggle-on", "&aPyAutoPickup &fis &aENABLED &ffor you.")

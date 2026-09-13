@@ -5,6 +5,9 @@ autopickup:
   blocks: true
   mob-drops: true
   works-in-creative: true
+  default-enabled: false
+  # If true, players need pyautopickup.use to use auto pickup.
+  require-permission: false
 
 default-bounding-box-radius: 1
 default-bounding-box-radius-ymin: 1
@@ -21,6 +24,9 @@ advanced:
   debug: false
 
 blacklisted-worlds: []
+
+# Checks SpigotMC and BuiltByBit for new plugin versions and notifies players with pyautopickup.update permission
+update-checker: true
 
 full-inventory:
   chat-message: true

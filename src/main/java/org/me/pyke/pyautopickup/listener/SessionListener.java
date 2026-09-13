@@ -14,6 +14,7 @@ public class SessionListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         plugin.getToggleService().warmup(e.getPlayer().getUniqueId());
+        plugin.getUpdateChecker().notifyPlayerLater(e.getPlayer());
     }
 
     @EventHandler

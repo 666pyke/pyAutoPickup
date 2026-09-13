@@ -64,15 +64,15 @@ public class Database {
         }
     }
 
-    public boolean getEnabled(UUID uuid) throws SQLException {
-        if (!isOpen()) return true;
+    public boolean getEnabled(UUID uuid, boolean defaultValue) throws SQLException {
+        if (!isOpen()) return defaultValue;
         try (PreparedStatement ps = conn.prepareStatement("SELECT enabled FROM toggles WHERE uuid=?")) {
             ps.setString(1, uuid.toString());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt("enabled") == 1;
             }
         }
-        return true;
+        return defaultValue;
     }
 
     public void setEnabled(UUID uuid, boolean enabled) throws SQLException {
@@ -98,14 +98,15 @@ public class Database {
         return true;
     }
 
-    public void setNotifyEnabled(UUID uuid, boolean notifyEnabled) throws SQLException {
+    public void setNotifyEnabled(UUID uuid, boolean notifyEnabled, boolean defaultPickupEnabled) throws SQLException {
         if (!isOpen()) return;
         try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO toggles(uuid, enabled, notify_enabled) VALUES(?, COALESCE((SELECT enabled FROM toggles WHERE uuid=?),1), ?) " +
+                "INSERT INTO toggles(uuid, enabled, notify_enabled) VALUES(?, COALESCE((SELECT enabled FROM toggles WHERE uuid=?),?), ?) " +
                         "ON CONFLICT(uuid) DO UPDATE SET notify_enabled=excluded.notify_enabled")) {
             ps.setString(1, uuid.toString());
             ps.setString(2, uuid.toString());
-            ps.setInt(3, notifyEnabled ? 1 : 0);
+            ps.setInt(3, defaultPickupEnabled ? 1 : 0);
+            ps.setInt(4, notifyEnabled ? 1 : 0);
             ps.executeUpdate();
         }
     }

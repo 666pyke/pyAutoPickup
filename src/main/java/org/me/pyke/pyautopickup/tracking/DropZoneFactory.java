@@ -47,9 +47,9 @@ public class DropZoneFactory {
         PyAutoPickup plugin = PyAutoPickup.getInstance();
 
         int lifetimeTicks = 2;
-        int horizontalRadius = plugin.getConfig().getInt("default-bounding-box-radius", 1);
-        int yBelow = plugin.getConfig().getInt("default-bounding-box-radius-ymin", 1);
-        int yAbove = plugin.getConfig().getInt("default-bounding-box-radius-ymax", 1);
+        int horizontalRadius = plugin.getSettings().getDefaultBoxRadius();
+        int yBelow = plugin.getSettings().getDefaultBoxYMin();
+        int yAbove = plugin.getSettings().getDefaultBoxYMax();
 
         if (sourceBlock != null) {
             Material sourceType = sourceBlock.getType();

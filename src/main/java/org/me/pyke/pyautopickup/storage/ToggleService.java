@@ -11,24 +11,34 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ToggleService {
 
     public static class Prefs {
-        public volatile boolean enabled = true;
+        public volatile boolean enabled;
         public volatile boolean notifyEnabled = true;
+
+        public Prefs(boolean defaultPickupEnabled) {
+            this.enabled = defaultPickupEnabled;
+        }
     }
 
     private final Plugin plugin;
     private final Database db;
     private final Map<UUID, Prefs> cache = new ConcurrentHashMap<>();
+    private volatile boolean defaultPickupEnabled;
 
-    public ToggleService(Plugin plugin, Database db) {
+    public ToggleService(Plugin plugin, Database db, boolean defaultPickupEnabled) {
         this.plugin = plugin;
         this.db = db;
+        this.defaultPickupEnabled = defaultPickupEnabled;
+    }
+
+    public void setDefaultPickupEnabled(boolean defaultPickupEnabled) {
+        this.defaultPickupEnabled = defaultPickupEnabled;
     }
 
     public void warmup(UUID uuid) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
-                Prefs p = cache.computeIfAbsent(uuid, k -> new Prefs());
-                p.enabled = db.getEnabled(uuid);
+                Prefs p = cache.computeIfAbsent(uuid, k -> new Prefs(defaultPickupEnabled));
+                p.enabled = db.getEnabled(uuid, defaultPickupEnabled);
                 p.notifyEnabled = db.getNotifyEnabled(uuid);
             } catch (SQLException e) {
                 plugin.getLogger().warning("Could not load autopickup preferences for " + uuid + ": " + e.getMessage());
@@ -41,15 +51,15 @@ public class ToggleService {
     }
 
     public boolean isPickupEnabled(UUID uuid) {
-        return cache.getOrDefault(uuid, new Prefs()).enabled;
+        return cache.getOrDefault(uuid, new Prefs(defaultPickupEnabled)).enabled;
     }
 
     public boolean isNotifyEnabled(UUID uuid) {
-        return cache.getOrDefault(uuid, new Prefs()).notifyEnabled;
+        return cache.getOrDefault(uuid, new Prefs(defaultPickupEnabled)).notifyEnabled;
     }
 
     public void setPickupEnabled(UUID uuid, boolean v) {
-        cache.computeIfAbsent(uuid, k -> new Prefs()).enabled = v;
+        cache.computeIfAbsent(uuid, k -> new Prefs(defaultPickupEnabled)).enabled = v;
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 db.setEnabled(uuid, v);
@@ -66,10 +76,10 @@ public class ToggleService {
     }
 
     public void setNotifyEnabled(UUID uuid, boolean v) {
-        cache.computeIfAbsent(uuid, k -> new Prefs()).notifyEnabled = v;
+        cache.computeIfAbsent(uuid, k -> new Prefs(defaultPickupEnabled)).notifyEnabled = v;
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
-                db.setNotifyEnabled(uuid, v);
+                db.setNotifyEnabled(uuid, v, defaultPickupEnabled);
             } catch (SQLException e) {
                 plugin.getLogger().warning("Could not save autopickup message toggle for " + uuid + ": " + e.getMessage());
             }

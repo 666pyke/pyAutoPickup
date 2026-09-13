@@ -10,6 +10,12 @@ commands:
     usage: "/pyautopickup [toggle|msgtoggle|reload]"
 
 permissions:
+  pyautopickup.use:
+    description: "Allows using auto pickup when autopickup.require-permission is enabled."
+    default: false
   pyautopickup.reload:
     description: "Allows reloading the pyAutoPickup configuration."
+    default: op
+  pyautopickup.update:
+    description: "Shows update notifications when a new pyAutoPickup version is available."
     default: op

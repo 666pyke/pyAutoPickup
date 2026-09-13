@@ -2,11 +2,10 @@ package org.me.pyke.pyautopickup.listener;
 
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -15,18 +14,18 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.EventExecutor;
 import org.me.pyke.pyautopickup.PyAutoPickup;
 import org.me.pyke.pyautopickup.utils.Lang;
+import org.me.pyke.pyautopickup.utils.Settings;
 
 public class EventListener implements Listener {
 
     private final PyAutoPickup plugin;
-    private final EventPriority itemSpawnPriority;
 
-    public EventListener(PyAutoPickup plugin, EventPriority itemSpawnPriority) {
+    public EventListener(PyAutoPickup plugin) {
         this.plugin = plugin;
-        this.itemSpawnPriority = itemSpawnPriority;
     }
 
     public void register() {
+        HandlerList.unregisterAll(this);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         EventExecutor itemSpawnExecutor = (listener, event) -> {
             if (event instanceof ItemSpawnEvent) {
@@ -36,17 +35,16 @@ public class EventListener implements Listener {
         plugin.getServer().getPluginManager().registerEvent(
                 ItemSpawnEvent.class,
                 this,
-                itemSpawnPriority,
+                plugin.getSettings().getItemSpawnPriority(),
                 itemSpawnExecutor,
                 plugin,
-                plugin.getConfig().getBoolean("advanced.item-spawn-ignore-cancelled", true)
+                plugin.getSettings().isItemSpawnIgnoreCancelled()
         );
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        FileConfiguration config = plugin.getConfig();
 
         debug("BlockBreak block=" + event.getBlock().getType()
                 + " player=" + player.getName()
@@ -61,12 +59,17 @@ public class EventListener implements Listener {
             debug("BlockBreak skipped: world is blacklisted");
             return;
         }
-        if (!config.getBoolean("autopickup.blocks", true)) {
+        if (!plugin.getSettings().isBlockPickupEnabled()) {
             debug("BlockBreak skipped: autopickup.blocks=false");
             return;
         }
 
-        if (player.getGameMode() == GameMode.CREATIVE && !config.getBoolean("autopickup.works-in-creative", false)) {
+        if (!hasPickupAccess(player)) {
+            debug("BlockBreak skipped: missing " + Settings.USE_PERMISSION);
+            return;
+        }
+
+        if (player.getGameMode() == GameMode.CREATIVE && !plugin.getSettings().isCreativePickupEnabled()) {
             debug("BlockBreak skipped: creative disabled");
             return;
         }
@@ -83,14 +86,14 @@ public class EventListener implements Listener {
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         Player player = event.getEntity().getKiller();
-        FileConfiguration config = plugin.getConfig();
 
         if (!isPluginEnabled()) return;
         if (player == null) return;
         if (isWorldBlacklisted(player)) return;
-        if (!config.getBoolean("autopickup.mob-drops", true)) return;
+        if (!plugin.getSettings().isMobDropPickupEnabled()) return;
+        if (!hasPickupAccess(player)) return;
 
-        if (player.getGameMode() == GameMode.CREATIVE && !config.getBoolean("autopickup.works-in-creative", false)) {
+        if (player.getGameMode() == GameMode.CREATIVE && !plugin.getSettings().isCreativePickupEnabled()) {
             return;
         }
 
@@ -107,7 +110,6 @@ public class EventListener implements Listener {
 
         Item item = event.getEntity();
         Location location = item.getLocation();
-        FileConfiguration config = plugin.getConfig();
 
         Player player = plugin.getDropOwnerManager().getDropOwner(location);
         debug("ItemSpawn item=" + item.getItemStack().getType()
@@ -116,7 +118,7 @@ public class EventListener implements Listener {
                 + " loc=" + formatLocation(location)
                 + " cancelled=" + event.isCancelled()
                 + " owner=" + (player == null ? "none" : player.getName())
-                + " priority=" + itemSpawnPriority.name());
+                + " priority=" + plugin.getSettings().getItemSpawnPriority().name());
 
         if (player == null) return;
         if (isWorldBlacklisted(player)) {
@@ -127,8 +129,12 @@ public class EventListener implements Listener {
             debug("ItemSpawn skipped: player toggle disabled");
             return;
         }
+        if (!hasPickupAccess(player)) {
+            debug("ItemSpawn skipped: missing " + Settings.USE_PERMISSION);
+            return;
+        }
 
-        if (player.getGameMode() == GameMode.CREATIVE && !config.getBoolean("autopickup.works-in-creative", false)) {
+        if (player.getGameMode() == GameMode.CREATIVE && !plugin.getSettings().isCreativePickupEnabled()) {
             debug("ItemSpawn skipped: creative disabled");
             return;
         }
@@ -147,40 +153,33 @@ public class EventListener implements Listener {
     private void sendFullInventoryMessage(Player player) {
         if (!plugin.getToggleService().isNotifyEnabled(player.getUniqueId())) return;
 
-        FileConfiguration config = plugin.getConfig();
-        boolean showChatMessage = config.getBoolean("full-inventory.chat-message", true);
-        String chatMessageFormat = Lang.color(
-                config.getString("full-inventory.chat-message-format", "Inventarul tau este plin! Itemele au fost dropate pe jos.")
-        );
+        String chatMessageFormat = Lang.get("full-inventory.chat-message-format", "Inventarul tau este plin! Itemele au fost dropate pe jos.");
 
-        boolean showTitleMessage = config.getBoolean("full-inventory.title-message", true);
-        String titleMessageFormat = Lang.color(
-                config.getString("full-inventory.title-message-format", "FULL INVENTORY!")
-        );
-        String subtitleMessageFormat = Lang.color(
-                config.getString("full-inventory.subtitle-message-format", "nu mai ai spatiu")
-        );
+        String titleMessageFormat = Lang.get("full-inventory.title-message-format", "FULL INVENTORY!");
+        String subtitleMessageFormat = Lang.get("full-inventory.subtitle-message-format", "nu mai ai spatiu");
 
-        if (showChatMessage) {
+        if (plugin.getSettings().isFullInventoryChatEnabled()) {
             player.sendMessage(chatMessageFormat);
         }
-        if (showTitleMessage) {
+        if (plugin.getSettings().isFullInventoryTitleEnabled()) {
             player.sendTitle(titleMessageFormat, subtitleMessageFormat, 10, 70, 20);
         }
     }
 
     private boolean isWorldBlacklisted(Player player) {
-        return plugin.getConfig()
-                .getStringList("blacklisted-worlds")
-                .contains(player.getWorld().getName());
+        return plugin.getSettings().isWorldBlacklisted(player.getWorld().getName());
     }
 
     private boolean isPluginEnabled() {
-        return plugin.getConfig().getBoolean("plugin-enabled", true);
+        return plugin.getSettings().isPluginEnabled();
     }
 
     private boolean isDebugEnabled() {
-        return plugin.getConfig().getBoolean("advanced.debug", false);
+        return plugin.getSettings().isDebugEnabled();
+    }
+
+    private boolean hasPickupAccess(Player player) {
+        return !plugin.getSettings().isPermissionRequired() || player.hasPermission(Settings.USE_PERMISSION);
     }
 
     private void debug(String message) {

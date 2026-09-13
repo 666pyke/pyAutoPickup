@@ -34,7 +34,7 @@ public class DropOwnerManager {
 
     public Player getDropOwner(Location location) {
         Player player = getDropOwner(location, dropLocationMap);
-        if (plugin.getConfig().getBoolean("advanced.debug", false) && player == null) {
+        if (plugin.getSettings().isDebugEnabled() && player == null) {
             plugin.getLogger().info("[Debug] No owner matched for item at "
                     + location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ()
                     + " in " + location.getWorld().getName()
@@ -72,7 +72,7 @@ public class DropOwnerManager {
     }
 
     private void debugRegistered(Player player, Location location, DropCaptureZone zone) {
-        if (plugin.getConfig().getBoolean("advanced.debug", false)) {
+        if (plugin.getSettings().isDebugEnabled()) {
             plugin.getLogger().info("[Debug] Registered box for " + player.getName()
                     + " at " + location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ()
                     + " ticksLeft=" + zone.getTicksRemaining()
